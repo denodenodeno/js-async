@@ -1,0 +1,409 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<title>Asynchronous JavaScript</title>
+
+		<meta name="description" content="this keyword in JavaScript">
+		<meta name="author" content="Denislav Ganchev">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+
+		<link href='https://fonts.googleapis.com/css?family=Roboto:400,500,300,700,400italic,300italic' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+		<link rel="stylesheet" href="css/styles.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+
+			<div class="slides">
+				<section>
+                    <img src="assets/images/js-logo.png" alt="JS logo"/>
+                    <h2><span class="color__yellow">Asynchronous JavaScript</span></h2>
+				</section>
+
+				<section>
+					<h2 class="uppercase color__yellow">Agenda</h2>
+					<section>
+						<ul>
+							<li class="fragment font__light">
+								JavaScript Event Loop
+							</li>
+                            <li class="fragment font__light">
+                                Difference between synchronous and asynchronous code
+							</li>
+							<li class="fragment font__light">
+								Callbacks
+							</li>
+							<li class="fragment font__light">
+								Promises
+							</li>
+							<li class="fragment font__light">
+								Generators
+							</li>
+                            <li class="fragment font__light">
+								async/await
+							</li>
+						</ul>
+					</section>
+				</section>
+
+                <section>
+                    <h2 class="color__yellow">
+                        JavaScript Event Loop
+                    </h2>
+
+                    <img src="assets/images/event-loop.png" alt="JS Event loop" height="500">
+
+	                <ul class="font__light" style="vertical-align: top;">
+		                <li>
+			                Runtime
+			                <ul>
+				                <li>heap</li>
+				                <li>stack</li>
+			                </ul>
+		                </li>
+		                <li>
+			                Web APIs/C++
+		                </li>
+		                <li>Task queue (Callback queue)</li>
+		                <li>Event loop</li>
+	                </ul>
+
+                </section>
+
+                <section>
+                    <h4 class="color__yellow">
+                        Difference between synchronous and <span class="color__blue">asynchronous</span> code
+                    </h4>
+
+                    <section>
+                        <pre class="javascript">
+                            <code data-trim data-no-escape>
+
+                                console.log('Print line One.');
+
+                                setTimeout(function() { console.log('Print line Two.'); }, 2000);
+
+                                console.log('Print line Three.');
+                            </code>
+                        </pre>
+
+	                    <pre class="javascript">
+                            <code data-trim data-no-escape>
+
+                                1) 'Print line One.'
+
+                                2) 'Print line Three.'
+
+                                3) 'Print line Two.'
+
+                            </code>
+                        </pre>
+                    </section>
+
+                    <section>
+                        <h4>Getting data from AJAX request</h4>
+                        <pre class="javascript">
+                            <code data-trim data-no-escape>
+                                function getData() {
+                                    var data;
+                                    $.get('/users', function(response) {
+                                        data = response; //2
+                                    });
+                                    return data; //1
+                                }
+                                var data = getData();
+
+                                console.log('The data is: ' + data); //undefined
+                            </code>
+                        </pre>
+                    </section>
+                </section>
+
+
+                <section>
+                    <h2 class="color__yellow">
+                        Callback functions
+                    </h2>
+                </section>
+
+                <section>
+                    <div>Instead of...</div>
+                    <pre class="javascript">
+                            <code data-trim data-no-escape>
+                                var data = getData();
+                                console.log('The data is: ' + data);
+                            </code>
+                        </pre>
+
+                    <div>we can do...</div>
+                    <pre class="javascript">
+	                            <code data-trim data-no-escape>
+	                                function getData(endpoint, callback) {
+	                                    $.get(endpoint, function(response) {
+	                                        callback(response);
+	                                    });
+	                                }
+	                            </code>
+	                        </pre>
+
+                    <pre class="javascript">
+	                            <code data-trim data-no-escape>
+									getData(function (data) {
+										console.log('The data is: ' + data);
+									});
+	                            </code>
+	                        </pre>
+                </section>
+
+                <section>
+                    <h4 class="color__yellow">
+                        Managing async code
+                    </h4>
+
+
+                    <section>
+                        <h4>Synchronous</h4>
+
+                        <pre class="javascript">
+                            <code data-trim data-no-escape>
+                                var text = readFile(fileName),
+                                    tokens = tokenize(text),
+                                    parseTree = parse(tokens),
+                                    optimizedTree = optimize(parseTree),
+                                    output = evaluate(optimizedTree);
+                                    console.log(output);
+                            </code>
+                        </pre>
+
+                    </section>
+
+                    <section>
+                        <h4>Asynchronous</h4>
+                        <p class="color__blue">callback hell</p>
+                        <pre class="javascript">
+	                            <code data-trim data-no-escape>
+		                            readFile(fileName, function(text) {
+		                                tokenize(text, function(tokens) {
+		                                    parse(tokens, function(parseTree) {
+		                                        optimize(parseTree, function(optimizedTree) {
+		                                            evaluate(optimizedTree, function(output) {
+		                                                console.log(output);
+		                                            });
+		                                        });
+		                                    });
+		                                });
+	                                });
+	                            </code>
+	                        </pre>
+
+                    </section>
+
+                    <section>
+                        <h4 class="color__blue">How we can improve the code?</h4>
+                    </section>
+
+                    <section>
+                        <h4>Split the code into functions</h4>
+
+                        <pre class="javascript">
+                            <code data-trim data-no-escape style="max-height: 500px;">
+                                function readFinish(text) {
+                                    tokenize(text, tokenizeFinish);
+                                }
+
+                                function tokenizeFinish(tokens) {
+                                    parse(tokens, parseFinish);
+                                }
+
+                                function parseFinish(parseTree) {
+                                    optimize(parseTree, optimizeFinish);
+                                }
+
+                                function optimizeFinish(optimizedTree) {
+                                    evalutate(optimizedTree, evaluateFinish);
+                                }
+
+                                function evaluateFinish(output) {
+                                    console.log(output);
+                                }
+
+                                readFile(fileName, readFinish);
+                            </code>
+                        </pre>
+
+                    </section>
+
+                    <section>
+                        <h4>Sequencing asynchronous logic</h4>
+
+                        <pre class="javascript">
+	                            <code data-trim data-no-escape>
+		                            function performTasks(input, tasks) {
+		                                if (tasks.length === 1) return tasks[0](input);
+		                                tasks[0](input, function(output) {
+		                                    performTasks(output, tasks.slice(1)); //Performs the tasks in the 'tasks[]' array
+		                                });
+		                            }
+
+		                            performTasks(fileName, [readFile, token, parse, optimize, evaluate, output => console.log(output)]);
+	                            </code>
+	                        </pre>
+
+                    </section>
+
+                </section>
+
+                <section>
+                    <h2 class="color__yellow">How we can do better?</h2>
+                </section>
+
+                <section>
+                    <h2 class="color__yellow">
+                        Promises
+                    </h2>
+                    <section>
+                        <pre class="javascript">
+                            <code data-trim data-no-escape>
+                                //callback
+                                function getData(endpoint, callback) {
+                                    $.get(endpoint, function(response) {
+                                        callback(response);
+                                    });
+                                }
+                            </code>
+                        </pre>
+
+                        <pre class="javascript">
+                            <code data-trim data-no-escape>
+                                //promise
+                                function getData(url) {
+                                    //create a new promise
+                                    return new Promise(function(resolve, reject) {
+                                        $.get(url, function(response) {
+                                            resolve(response);
+                                        }, function(err) {
+                                            reject(new Error('Request failed.'));
+                                        });
+                                    });
+                                }
+
+                                //usage
+                                getData('/users')
+                                    .then(function(data) {
+                                        console.log(data)
+                                    })
+                                    .catch(function (err) {
+                                        console.log(err);
+                                    }});
+                            </code>
+                        </pre>
+                    </section>
+
+                    <section>
+                        <pre class="javascript">
+                            <code data-trim data-no-escape style="max-height: 500px;">
+                                readFile('fileName')
+                                    .then(function(text) {
+                                        return tokenize(text);
+                                    })
+                                    .then(function(tokens) {
+                                        return parse(tokens);
+                                    })
+                                    .then(function(parseTree) {
+                                        return optimize(parseTree);
+                                    })
+                                    .then(function(optimizedTree) {
+                                        return evaluate(optimizedTree);
+                                    })
+                                    .then(function(output) {
+                                        console.log(output);
+                                    })
+                                    .catch(function (err) {
+                                        console.log(err);
+                                    });
+                            </code>
+                        </pre>
+
+                    </section>
+
+                </section>
+
+                <section>
+                    <h2 class="color__yellow">
+                        Generators
+                    </h2>
+                </section>
+
+                <section>
+                    <h2 class="color__yellow">
+                        async/await
+                    </h2>
+
+                    <section>
+                        <pre class="javascript">
+                            <code data-trim data-no-escape>
+                                //async/await
+                                async function getData(url) {
+                                    try {
+                                        var response = await $.get(url);
+                                        //do something with the response
+                                        console.log(response);
+                                    } catch(err) {
+                                        console.log(err);
+                                    }
+                                }
+                            </code>
+                        </pre>
+                    </section>
+
+                </section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+                controls: true,
+                progress: true,
+                history: true,
+                center: true,
+                width: 1200,
+                height: 800,
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+                // Optional reveal.js plugins
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/zoom-js/zoom.js', async: true },
+                    { src: 'plugin/notes/notes.js', async: true }
+                ]
+			});
+		</script>
+	</body>
+</html>
